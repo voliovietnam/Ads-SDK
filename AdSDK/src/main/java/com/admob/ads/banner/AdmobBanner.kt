@@ -128,8 +128,8 @@ object AdmobBanner {
 
         val adView = banners[space]
 
-
         if (adView == null || forceRefresh) {
+            Log.e(TAG, "show: adView = null-${adView == null} and forceRefresh: $forceRefresh ")
 
             val context =
                 if (bannerType == BannerAdSize.BannerCollapsibleBottom || bannerType == BannerAdSize.BannerCollapsibleTop)
@@ -138,8 +138,8 @@ object AdmobBanner {
                     AdsSDK.app
 
             AdView(context).let {
-                val id = if (AdsSDK.isDebugging){
-                    if (bannerType == BannerAdSize.BannerCollapsibleBottom || bannerType == BannerAdSize.BannerCollapsibleTop){
+                val id = if (AdsSDK.isDebugging) {
+                    if (bannerType == BannerAdSize.BannerCollapsibleBottom || bannerType == BannerAdSize.BannerCollapsibleTop) {
                         Constant.ID_ADMOB_BANNER_COLLAPSIVE_TEST
                     } else {
                         Constant.ID_ADMOB_BANNER_TEST
@@ -150,7 +150,7 @@ object AdmobBanner {
 
                 it.adUnitId = id
                 it.setAdSize(adSize)
-                it.setAdCallback(it, bannerType, callback) {
+                it.setAdCallback(it, space, bannerType, callback) {
                     addExistBanner(lifecycle, adContainer, it)
                 }
                 it.loadAd(getAdRequest(bannerType))
@@ -161,8 +161,9 @@ object AdmobBanner {
         }
 
         if (adView != null) {
+            Log.e(TAG, "show: adView != null")
             addExistBanner(lifecycle, adContainer, adView)
-            adView.setAdCallback(adView, bannerType, callback) {
+            adView.setAdCallback(adView, space, bannerType, callback) {
                 addExistBanner(lifecycle, adContainer, adView)
             }
             return
@@ -186,13 +187,13 @@ object AdmobBanner {
 
             override fun onStop(owner: LifecycleOwner) {
                 super.onStop(owner)
-                Log.e("DucLH----","onStop")
+                Log.e("DucLH----", "onStop")
             }
 
             override fun onDestroy(owner: LifecycleOwner) {
                 super.onDestroy(owner)
                 bannerView.destroy()
-                Log.e("DucLH----","onDestroy")
+                Log.e("DucLH----", "onDestroy")
                 lifecycle.removeObserver(this)
                 adContainer.removeAllViews()
                 bannerView.removeAllViews()
@@ -237,6 +238,7 @@ object AdmobBanner {
 
     private fun AdView.setAdCallback(
         adView: AdView,
+        space: String,
         bannerType: BannerAdSize,
         tAdCallback: TAdCallback?,
         onAdLoaded: () -> Unit
@@ -273,12 +275,12 @@ object AdmobBanner {
                     AdsSDK.adCallback.onPaidValueListener(bundle)
                     tAdCallback?.onPaidValueListener(bundle)
                 }
-                banners[adView.adUnitId]?.let {
+                banners[space]?.let {
                     if (bannerType == BannerAdSize.BannerCollapsibleTop || bannerType == BannerAdSize.BannerCollapsibleBottom) {
 //                        it.destroy()
                     }
                 }
-                banners[adView.adUnitId] = adView
+                banners[space] = adView
 
                 onAdLoaded.invoke()
             }
@@ -299,6 +301,21 @@ object AdmobBanner {
                 e.printStackTrace()
                 FirebaseCrashlytics.getInstance().recordException(e)
             }
+        }
+    }
+
+    fun getAdsView(space: String): AdView? = banners[space]
+
+    fun destroyAdBySpace(space: String) {
+        kotlin.runCatching {
+            banners[space]?.let { adView ->
+                Log.e(TAG, "destroyAdBySpace: " + space)
+                adView.destroy()
+                (adView.parent as? ViewGroup)?.removeView(adView)
+                banners[space] = null
+            }
+        }.onFailure {
+            FirebaseCrashlytics.getInstance().recordException(it)
         }
     }
 }

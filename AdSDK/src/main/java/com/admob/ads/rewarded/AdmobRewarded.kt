@@ -50,7 +50,13 @@ object AdmobRewarded {
             return
         }
 
-        if (!AdsSDK.app.isNetworkAvailable() || AdsSDK.isPremium || (adChild.adsType != AdFormat.Reward) || !AdsSDK.app.isNetworkAvailable() || !adChild.isEnable()) {
+        if (!AdsSDK.app.isNetworkAvailable()) {
+            onFailureUserNotEarn.invoke()
+            return
+        }
+
+        if (AdsSDK.isPremium || (adChild.adsType != AdFormat.Reward) || !adChild.isEnable()
+        ) {
             onUserEarnedReward.invoke()
             return
         }

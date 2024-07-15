@@ -118,6 +118,10 @@ object AdmobBanner {
             return
         }
 
+        if ((bannerType == BannerAdSize.BannerCollapsibleTop || bannerType == BannerAdSize.BannerCollapsibleBottom) && forceRefresh) {
+            destroyAdBySpace(space)
+        }
+
 
         val adSize = getAdSize(bannerType)
         addLoadingLayout(adContainer, adSize)
@@ -177,7 +181,7 @@ object AdmobBanner {
         adContainer: ViewGroup,
         bannerView: AdView
     ) {
-        if (lifecycle?.currentState != Lifecycle.State.DESTROYED){
+        if (lifecycle?.currentState != Lifecycle.State.DESTROYED) {
             adContainer.removeAllViews()
             if (bannerView.parent is ViewGroup && bannerView.parent != null) {
                 (bannerView.parent as ViewGroup).removeAllViews()

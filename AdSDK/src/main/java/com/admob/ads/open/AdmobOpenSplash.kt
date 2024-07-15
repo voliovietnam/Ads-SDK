@@ -5,6 +5,7 @@ import android.os.CountDownTimer
 import com.admob.AdType
 import com.admob.TAdCallback
 import com.admob.ads.AdsSDK
+import com.admob.app_update.Update
 import com.admob.getAppCompatActivityOnTop
 import com.admob.onNextActionWhenResume
 import com.admob.waitActivityResumed
@@ -33,12 +34,15 @@ object AdmobOpenSplash {
 
         var isNextActionExecuted = false
 
+        fun checkUpdateAndNext(){
+            Update.checkUpdateAfterShowAd(nextAction)
+        }
         fun callNextAction() {
             if (isNextActionExecuted) {
                 return
             }
             isNextActionExecuted = true
-            onNextActionWhenResume(nextAction)
+            onNextActionWhenResume(::checkUpdateAndNext)
         }
 
         if (!AdsSDK.isEnableOpenAds) {

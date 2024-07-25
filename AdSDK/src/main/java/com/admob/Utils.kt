@@ -100,12 +100,15 @@ fun pushAppsFlyerAdValueTracking(
 ) {
 
     val value = adValue.valueMicros / 1000000.0
-    val context = AdsSDK.app.applicationContext
-    context?.let {
-        AppsFlyerLib.getInstance().logEvent(
-            it, "ad_roas_tiktok", mapOf<String, Double>("af_revenue" to value)
-        )
+    if (AdsSDK.isEnableTiktokEvent){
+        val context = AdsSDK.app.applicationContext
+        context?.let {
+            AppsFlyerLib.getInstance().logEvent(
+                it, "ad_roas_tiktok", mapOf<String, Double>("af_revenue" to value)
+            )
+        }
     }
+
     val customParams: MutableMap<String, String> = HashMap()
     customParams[Scheme.AD_UNIT] = adId
     customParams[Scheme.AD_TYPE] = adType

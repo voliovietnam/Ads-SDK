@@ -72,6 +72,8 @@ object AdsSDK {
 
     internal var isEnableAppsflyer = false
 
+    internal var isEnableTiktokEvent = false
+
     private var gson = Gson()
 
 
@@ -318,6 +320,10 @@ object AdsSDK {
             it.spaceName == space
         }
 
+    }
+
+    fun enableTiktokEvent(isEnable: Boolean){
+        isEnableTiktokEvent = isEnable
     }
 
 

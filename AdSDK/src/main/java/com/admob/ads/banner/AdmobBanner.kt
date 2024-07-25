@@ -118,6 +118,10 @@ object AdmobBanner {
             return
         }
 
+        if ((bannerType == BannerAdSize.BannerCollapsibleTop || bannerType == BannerAdSize.BannerCollapsibleBottom) && forceRefresh) {
+            destroyAdBySpace(space)
+        }
+
 
         val adSize = getAdSize(bannerType)
         addLoadingLayout(adContainer, adSize)
@@ -177,28 +181,30 @@ object AdmobBanner {
         adContainer: ViewGroup,
         bannerView: AdView
     ) {
-        adContainer.removeAllViews()
-        if (bannerView.parent is ViewGroup && bannerView.parent != null) {
-            (bannerView.parent as ViewGroup).removeAllViews()
+        if (lifecycle?.currentState != Lifecycle.State.DESTROYED) {
+            adContainer.removeAllViews()
+            if (bannerView.parent is ViewGroup && bannerView.parent != null) {
+                (bannerView.parent as ViewGroup).removeAllViews()
+            }
+            adContainer.addView(bannerView)
+
+            lifecycle?.addObserver(object : DefaultLifecycleObserver {
+
+                override fun onStop(owner: LifecycleOwner) {
+                    super.onStop(owner)
+//                    Log.e("DucLH----", "onStop")
+                }
+
+                override fun onDestroy(owner: LifecycleOwner) {
+                    super.onDestroy(owner)
+                    bannerView.destroy()
+//                    Log.e("DucLH----", "onDestroy")
+                    lifecycle.removeObserver(this)
+                    adContainer.removeAllViews()
+                    bannerView.removeAllViews()
+                }
+            })
         }
-        adContainer.addView(bannerView)
-
-        lifecycle?.addObserver(object : DefaultLifecycleObserver {
-
-            override fun onStop(owner: LifecycleOwner) {
-                super.onStop(owner)
-                Log.e("DucLH----", "onStop")
-            }
-
-            override fun onDestroy(owner: LifecycleOwner) {
-                super.onDestroy(owner)
-                bannerView.destroy()
-                Log.e("DucLH----", "onDestroy")
-                lifecycle.removeObserver(this)
-                adContainer.removeAllViews()
-                bannerView.removeAllViews()
-            }
-        })
     }
 
     private fun addLoadingLayout(adContainer: ViewGroup, adSize: AdSize) {

@@ -7,6 +7,8 @@ import com.admob.AdFormat
 import com.admob.AdType
 import com.admob.TAdCallback
 import com.admob.ads.AdsSDK
+import com.admob.app_update.Update
+import com.admob.getActivityOnTop
 import com.admob.getAppCompatActivityOnTop
 import com.admob.isEnable
 import com.admob.isNetworkAvailable
@@ -31,15 +33,19 @@ object AdmobInterSplash {
         nextAction: () -> Unit
     ) {
 
+        fun checkUpdateAndNext(){
+            Update.checkUpdateAfterShowAd(nextAction)
+        }
+
         val adChild = AdsSDK.getAdChild(space)
 
         if (adChild == null){
-            nextAction.invoke()
+            checkUpdateAndNext()
             return
         }
 
         if (!AdsSDK.isEnableInter || AdsSDK.isPremium || (adChild.adsType != AdFormat.Interstitial) || !AdsSDK.app.isNetworkAvailable() || !adChild.isEnable()) {
-            nextAction.invoke()
+            checkUpdateAndNext()
             return
         }
 
@@ -48,7 +54,7 @@ object AdmobInterSplash {
                 super.onAdFailedToLoad(adUnit, adType, error)
                 Log.e("DucLH--inter", "Failload: $error $adUnit ${adType.name}")
                 timer?.cancel()
-                onNextActionWhenResume(nextAction)
+                onNextActionWhenResume(::checkUpdateAndNext)
             }
 
             override fun onAdLoaded(adUnit: String, adType: AdType) {
@@ -65,7 +71,7 @@ object AdmobInterSplash {
                 super.onAdFailedToShowFullScreenContent(error, adUnit, adType)
                 Log.e("DucLH--inter", "FailShow: $error $adUnit ${adType.name}")
                 timer?.cancel()
-                onNextActionWhenResume(nextAction)
+                onNextActionWhenResume(::checkUpdateAndNext)
             }
         }
 
@@ -77,7 +83,7 @@ object AdmobInterSplash {
 
                 if (!AdsSDK.isEnableInter) {
                     timer?.cancel()
-                    nextAction.invoke()
+                    checkUpdateAndNext()
                     return
                 }
 
@@ -93,7 +99,7 @@ object AdmobInterSplash {
                                 loadAfterDismiss = false,
                                 loadIfNotAvailable = false,
                                 callback = showAdCallback,
-                                nextAction = nextAction
+                                nextAction = ::checkUpdateAndNext
                             )
                         }
                     }
@@ -102,7 +108,7 @@ object AdmobInterSplash {
 
             override fun onFinish() {
                 timer?.cancel()
-                onNextActionWhenResume(nextAction)
+                onNextActionWhenResume(::checkUpdateAndNext)
             }
         }.start()
     }

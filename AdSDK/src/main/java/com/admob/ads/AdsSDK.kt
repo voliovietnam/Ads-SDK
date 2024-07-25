@@ -322,8 +322,9 @@ object AdsSDK {
 
     }
 
-    fun enableTiktokEvent(isEnable: Boolean){
+    fun enableTiktokEvent(isEnable: Boolean): AdsSDK{
         isEnableTiktokEvent = isEnable
+        return this
     }
 
 

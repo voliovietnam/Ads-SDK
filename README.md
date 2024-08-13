@@ -2,9 +2,9 @@
 
 **dependency**
 ```
-implementation 'com.github.voliothonh:Ads-SDK:2.x.x'
+implementation 'com.github.voliovietnam:Ads-SDK:2.x.x'
 ```
-https://github.com/voliothonh/Ads-SDK/releases
+https://github.com/voliovietnam/Ads-SDK/releases
 
 **settings.gradle**
 ```

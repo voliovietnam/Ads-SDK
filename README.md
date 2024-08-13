@@ -2,7 +2,7 @@
 
 **dependency**
 ```
-implementation 'com.github.voliovietnam:Ads-SDK:2.x.x'
+implementation 'com.github.voliovietnam:Ads-SDK:2.2.2'
 ```
 https://github.com/voliovietnam/Ads-SDK/releases
 

@@ -19,6 +19,7 @@ interface TAdCallback {
     fun onPaidValueListener(bundle : Bundle) {}
     fun onSetInterFloorId(){} /*When application resume, some device init all member variable, pls call set InterFloor.setId*/
     fun onDisable(){}
+    fun onCollapsibleDismiss(){}
 }
 
 enum class AdType {

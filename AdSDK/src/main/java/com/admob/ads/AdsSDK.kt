@@ -214,6 +214,14 @@ object AdsSDK {
             super.onSetInterFloorId()
             outsideAdCallback?.onSetInterFloorId()
         }
+
+        override fun onCollapsibleDismiss() {
+            super.onCollapsibleDismiss()
+        }
+
+        override fun onDisable() {
+            super.onDisable()
+        }
     }
 
     val activities = mutableSetOf<Activity>()
@@ -418,6 +426,7 @@ object AdsSDK {
         setEnableInter(false)
         setEnableOpenAds(false)
         setEnableRewarded(false)
+        setEnableBanner(false)
     }
 
     fun setAutoTrackingPaidValueInSdk(useInSDK: Boolean) {

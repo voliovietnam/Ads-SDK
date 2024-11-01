@@ -1,14 +1,20 @@
 package com.admob.ads.nativead
 
+import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.PopupWindow
 import android.widget.RatingBar
 import android.widget.TextView
 import androidx.annotation.LayoutRes
 import androidx.core.view.isVisible
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import com.admob.AdFormat
 import com.admob.AdType
 import com.admob.Constant
@@ -42,6 +48,7 @@ object AdmobNative {
     private val nativesCallback = mutableMapOf<String, TAdCallback?>()
     private val nativeWithViewGroup = mutableMapOf<String, ViewGroup?>()
     private val nativesLoading = mutableMapOf<String, INativeLoadCallback>()
+    private val nativesCollapsiblePopupWindow = mutableMapOf<String, PopupWindow>()
 
     fun loadOnly(adUnitId: String) {
         if (!AdsSDK.isEnableNative) {
@@ -60,7 +67,7 @@ object AdmobNative {
     fun show(
         adContainer: ViewGroup,
         space: String,
-        @LayoutRes nativeContentLayoutId: Int,
+        @LayoutRes nativeContentLayoutId: Int ,
         forceRefresh: Boolean = false,
         callback: TAdCallback? = null
     ) {
@@ -92,6 +99,8 @@ object AdmobNative {
                         adContainer,
                         nativeAd,
                         nativeContentLayoutId,
+                        null,
+                        null,
                         space,
                         callback
                     )
@@ -106,6 +115,8 @@ object AdmobNative {
                             adContainer,
                             nativeAd,
                             nativeContentLayoutId,
+                            null,
+                            null,
                             space,
                             callback
                         )
@@ -117,6 +128,8 @@ object AdmobNative {
                     adContainer,
                     nativeAd,
                     nativeContentLayoutId,
+                    null,
+                    null,
                     space,
                     callback
                 )
@@ -129,6 +142,8 @@ object AdmobNative {
                                 adContainer,
                                 nativeAd,
                                 nativeContentLayoutId,
+                                null,
+                                null,
                                 space,
                                 callback
                             )
@@ -139,6 +154,83 @@ object AdmobNative {
         }
     }
 
+
+    fun showCollapsible(
+        adContainer: ViewGroup,
+        space: String,
+        @LayoutRes nativeContentLayoutId: Int ,
+        @LayoutRes nativeCollapsibleLayoutId: Int ,
+        lifecycle: Lifecycle,
+        forceRefresh: Boolean = false,
+        callback: TAdCallback? = null
+    ) {
+
+        val adChild = AdsSDK.getAdChild(space) ?: return
+
+        if (!AdsSDK.isEnableNative || AdsSDK.isPremium || (adChild.adsType != AdFormat.Native) || !AdsSDK.app.isNetworkAvailable() || !adChild.isEnable()) {
+            adContainer.removeAllViews()
+            callback?.onDisable()
+            adContainer.isVisible = false
+            return
+        }
+
+        addLoadingLayout(adContainer)
+
+        if (!adContainer.context.isNetworkAvailable()) {
+            return
+        }
+
+        val nativeAd = natives[space]
+        val nativeIsStillLoading = nativesLoading.contains(space)
+
+        // Native vẫn tiếp tục loading
+        if (nativeIsStillLoading) {
+            nativesLoading[space] = object : INativeLoadCallback {
+                override fun forNativeAd(space: String, nativeAd: NativeAd) {
+                    fillNative(
+                        adContainer,
+                        nativeAd,
+                        nativeContentLayoutId,
+                        nativeCollapsibleLayoutId, lifecycle, space, callback)
+
+                }
+            }
+        } else {
+            // Native đang ko loading và (đang null hoặc forceRefresh) thì load lại quảng cáo
+            if (nativeAd == null) {
+                load(space, callback, object : INativeLoadCallback {
+                    override fun forNativeAd(space: String, nativeAd: NativeAd) {
+                        fillNative(
+                            adContainer,
+                            nativeAd,
+                            nativeContentLayoutId,
+                            nativeCollapsibleLayoutId, lifecycle, space, callback)
+                    }
+                })
+            } else {
+                // Native đang ko loading  và có sẵn quảng cáo thì fill luôn
+                fillNative(
+                    adContainer,
+                    nativeAd,
+                    nativeContentLayoutId,
+                    null, null, space, callback)
+
+                // Nếu forceRefresh thì load quảng cáo mới
+                if (forceRefresh) {
+                    dismissCollapsible(space)
+                    load(space, callback, object : INativeLoadCallback {
+                        override fun forNativeAd(space: String, nativeAd: NativeAd) {
+                            fillNative(
+                                adContainer,
+                                nativeAd,
+                                nativeContentLayoutId,
+                                nativeCollapsibleLayoutId, lifecycle, space, callback)
+                        }
+                    })
+                }
+            }
+        }
+    }
 
     private fun load(
         space: String,
@@ -167,7 +259,11 @@ object AdmobNative {
             .withAdListener(object : AdListener() {
                 override fun onAdFailedToLoad(adError: LoadAdError) {
                     AdsSDK.adCallback.onAdFailedToLoad(adChild.adsId, AdType.Native, adError)
-                    getNativeCallback(space)?.onAdFailedToLoad(adChild.adsId, AdType.Native, adError)
+                    getNativeCallback(space)?.onAdFailedToLoad(
+                        adChild.adsId,
+                        AdType.Native,
+                        adError
+                    )
                     nativesLoading.remove(space)
                     natives[space] = null
                     runCatching { Throwable(adError.message) }
@@ -218,11 +314,15 @@ object AdmobNative {
         viewGroup: ViewGroup,
         nativeAd: NativeAd,
         @LayoutRes nativeContentLayoutId: Int,
+        @LayoutRes nativeCollapsibleLayoutId: Int? = null,
+        lifecycle: Lifecycle? = null,
         space: String,
         callback: TAdCallback?
     ) {
+        if (!AdsSDK.isEnableNative) return
+
         val adUnitId = AdsSDK.getAdChild(space)?.adsId ?: return
-        setNativeCallback(space,callback)
+        setNativeCallback(space, callback)
         try {
             nativeAd.setOnPaidEventListener(null)
             nativeAd.setOnPaidEventListener { adValue ->
@@ -231,46 +331,144 @@ object AdmobNative {
                 AdsSDK.adCallback.onPaidValueListener(bundle)
                 callback?.onPaidValueListener(bundle)
             }
-            val contentNativeView = LayoutInflater
-                .from(viewGroup.context)
-                .inflate(nativeContentLayoutId, null, false)
 
-            val unifiedNativeAdView = NativeAdView(AdsSDK.app)
 
-            unifiedNativeAdView.layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-
-            contentNativeView.parent?.let {
-                (it as ViewGroup).removeView(contentNativeView)
-            }
-
-            try {
+//            val contentNativeView = LayoutInflater
+//                .from(viewGroup.context)
+//                .inflate(nativeContentLayoutId, null, false)
+//
+//            val unifiedNativeAdView = NativeAdView(AdsSDK.app)
+//
+//            unifiedNativeAdView.layoutParams = ViewGroup.LayoutParams(
+//                ViewGroup.LayoutParams.MATCH_PARENT,
+//                ViewGroup.LayoutParams.MATCH_PARENT
+//            )
+//
+//            contentNativeView.parent?.let {
+//                (it as ViewGroup).removeView(contentNativeView)
+//            }
+            val isViewSaveEnable = try {
                 if (nativeAd.responseInfo?.adapterResponses?.find { it.adapterClassName == "com.google.ads.mediation.facebook.FacebookMediationAdapter" } != null) {
-                    contentNativeView.isSaveEnabled = false
-                    contentNativeView.isSaveFromParentEnabled = false
-
-                    unifiedNativeAdView.isSaveEnabled = false
-                    unifiedNativeAdView.isSaveFromParentEnabled = false
-
                     viewGroup.isSaveEnabled = false
                     viewGroup.isSaveFromParentEnabled = false
+                    false
+                } else {
+                    true
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                true
             }
 
-            unifiedNativeAdView.addView(contentNativeView)
-            viewGroup.removeAllViews()
-            populateUnifiedNativeAdView(nativeAd, unifiedNativeAdView)
-            viewGroup.addView(unifiedNativeAdView)
+//            unifiedNativeAdView.addView(contentNativeView)
+//            populateUnifiedNativeAdView(nativeAd, unifiedNativeAdView)
+//            viewGroup.removeAllViews()
+//            viewGroup.addView(unifiedNativeAdView)
+            showNativeAdView(
+                space,
+                lifecycle = lifecycle,
+                nativeContentLayoutId,
+                nativeAd,
+                viewGroup,
+                isViewSaveEnable,
+                false,
+                callback
+            )
+            if (nativeCollapsibleLayoutId != null){
+                showNativeAdView(
+                    space,
+                    lifecycle = lifecycle,
+                    nativeCollapsibleLayoutId,
+                    nativeAd,
+                    viewGroup,
+                    isViewSaveEnable,
+                    true,
+                    callback
+                )
+            }
 
             nativeWithViewGroup[space] = viewGroup
 
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    private fun showNativeAdView(
+        space: String,
+        lifecycle: Lifecycle?,
+        @LayoutRes nativeLayoutId: Int,
+        nativeAd: NativeAd,
+        viewGroup: ViewGroup,
+        isViewSaveEnable: Boolean,
+        showOnPopup: Boolean,
+        callback: TAdCallback? = null
+    ) {
+        if (!AdsSDK.isEnableNative) return
+
+        val contentNativeView = LayoutInflater
+            .from(viewGroup.context)
+            .inflate(nativeLayoutId, null, false)
+
+        val unifiedNativeAdView = NativeAdView(AdsSDK.app)
+
+        unifiedNativeAdView.layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+
+        contentNativeView.parent?.let {
+            (it as ViewGroup).removeView(contentNativeView)
+        }
+
+        contentNativeView.isSaveEnabled = isViewSaveEnable
+        contentNativeView.isSaveFromParentEnabled = isViewSaveEnable
+
+        unifiedNativeAdView.isSaveEnabled = isViewSaveEnable
+        unifiedNativeAdView.isSaveFromParentEnabled = isViewSaveEnable
+
+        unifiedNativeAdView.addView(contentNativeView)
+        populateUnifiedNativeAdView(nativeAd, unifiedNativeAdView)
+
+        if (showOnPopup) {
+            Log.e(TAG, "showNativeAdView: popup", )
+            val popupWindow = PopupWindow(
+                unifiedNativeAdView,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            popupWindow.setOnDismissListener {
+                nativesCollapsiblePopupWindow.remove(space)
+                callback?.onCollapsibleDismiss()
+                AdsSDK.adCallback.onCollapsibleDismiss()
+            }
+            nativesCollapsiblePopupWindow[space] =  popupWindow
+
+            popupWindow.showAsDropDown(viewGroup, 0, -contentNativeView.minimumHeight)
+            contentNativeView.findViewById<View>(R.id.btnCloseNative)?.setOnClickListener {
+                popupWindow.dismiss()
+            }
+
+            lifecycle?.addObserver(object : LifecycleEventObserver {
+                override fun onStateChanged(
+                    source: LifecycleOwner, event: Lifecycle.Event
+                ) {
+                    if (event == Lifecycle.Event.ON_DESTROY) {
+                        popupWindow.dismiss()
+                    }
+                }
+            })
+        } else {
+            viewGroup.removeAllViews()
+            viewGroup.addView(unifiedNativeAdView)
+        }
+
+    }
+
+    private fun dismissCollapsible(space: String){
+        kotlin.runCatching {
+            nativesCollapsiblePopupWindow[space]?.dismiss()
+        }
+
     }
 
 
@@ -445,6 +643,9 @@ object AdmobNative {
                 nativeWithViewGroup.forEach { (_, viewGroup) ->
                     viewGroup?.removeAllViews()
                     viewGroup?.isVisible = false
+                }
+                nativesCollapsiblePopupWindow.forEach { t, popup ->
+                    popup.dismiss()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

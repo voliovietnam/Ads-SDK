@@ -18,6 +18,7 @@ import com.admob.ui.BaseDialogFullScreen
 import com.admob.waitActivityResumed
 import com.admob.waitActivityStop
 import com.admob.waitingResume
+import com.admob.waitingResumeNoDelay
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -318,10 +319,10 @@ object AdmobInter {
 
         val dialog = BaseDialogFullScreen(topActivity,resLoadingAds)
 
+
         if (topActivity.lifecycle.currentState == Lifecycle.State.RESUMED) {
             if (!dialog.isShowing) {
                 dialog.show()
-
                 topActivity.waitActivityStop {
                     if (dialog.isShowing) {
                         dialog.dismiss()
@@ -329,8 +330,10 @@ object AdmobInter {
                 }
                 delay(timeShowLoading) {
                     if (topActivity.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                        if (dialog.isShowing) {
-                            dialog.dismiss()
+                        delay(2_000){
+                            if (dialog.isShowing) {
+                                dialog.dismiss()
+                            }
                         }
                         nextAction.invoke()
                     } else {

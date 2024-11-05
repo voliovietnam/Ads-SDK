@@ -4,12 +4,13 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_r8_white"
+            android:orientation="vertical"
             app:cardCornerRadius="@dimen/_8sdp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -18,49 +19,41 @@
             app:layout_constraintWidth_percent="0.75">
 
             <ProgressBar
-                android:id="@+id/progress_circular"
-                android:layout_width="@dimen/_40sdp"
-                android:layout_height="@dimen/_40sdp"
-                android:layout_marginTop="@dimen/_16sdp"
-                android:indeterminate="true"
-                android:indeterminateDuration="2000"
-                android:interpolator="@android:anim/overshoot_interpolator"
-                android:indeterminateTint="#0288D1"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:layout_width="@dimen/_64sdp"
+                android:layout_height="@dimen/_64sdp"
+                android:layout_gravity="center"
+                android:indeterminateTint="#7084EF"
+                android:layout_marginTop="@dimen/_24sdp"
+                app:trackThickness="@dimen/_4sdp" />
+
+
 
             <TextView
                 android:id="@+id/tvTitle"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
                 android:layout_marginTop="@dimen/_16sdp"
                 android:gravity="center"
                 android:text="@string/ad_text_loading"
                 android:textColor="#AD000000"
                 android:textSize="18sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/progress_circular" />
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvContent"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
                 android:layout_marginHorizontal="@dimen/_24sdp"
                 android:layout_marginBottom="@dimen/_16sdp"
                 android:gravity="center"
                 android:text="@string/full_screen_ad_will_appear"
                 android:textColor="#AD000000"
-                android:textSize="14sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvTitle" />
+                android:textSize="14sp" />
 
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

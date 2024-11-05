@@ -7,13 +7,14 @@ import com.admob.AdType
 import com.admob.Constant
 import com.admob.TAdCallback
 import com.admob.ads.AdsSDK
+import com.admob.ads.R
 import com.admob.delay
 import com.admob.getActivityOnTop
 import com.admob.getAppCompatActivityOnTop
 import com.admob.getPaidTrackingBundle
 import com.admob.isEnable
 import com.admob.isNetworkAvailable
-import com.admob.ui.dialogs.DialogShowLoadingAds
+import com.admob.ui.BaseDialogFullScreen
 import com.admob.waitActivityResumed
 import com.admob.waitActivityStop
 import com.admob.waitingResume
@@ -38,7 +39,7 @@ object AdmobInter {
             return if (remoteTime > 0) remoteTime else 15_000
         }
 
-    private var timeShowLoading = 1_000
+    private var timeShowLoading = 1_500
 
     /**
      * Step1: Không có mạng => Không load
@@ -139,6 +140,7 @@ object AdmobInter {
         nextActionBeforeDismissDelayTime: Long = 0,
         loadAfterDismiss: Boolean = true,
         loadIfNotAvailable: Boolean = true,
+        resLoadingAds: Int = R.layout.dialog_loading_inter,
         callback: TAdCallback? = null,
         nextAction: () -> Unit
     ) {
@@ -184,7 +186,7 @@ object AdmobInter {
             nextAction.invoke()
         } else {
             if (showLoadingInter) {
-                showLoadingBeforeInter {
+                showLoadingBeforeInter(resLoadingAds) {
                     invokeShowInter(
                         space,
                         interAd,
@@ -306,7 +308,7 @@ object AdmobInter {
      * 5.   Nếu Activity đang resume => ẩn dialog/ next action
      * 6.   Nếu Activity không resume => đợi resume thì ẩn dialog / nextAction
      */
-    private fun showLoadingBeforeInter(nextAction: () -> Unit) {
+    private fun showLoadingBeforeInter(resLoadingAds: Int, nextAction: () -> Unit) {
         val topActivity = AdsSDK.getAppCompatActivityOnTop()
 
         if (topActivity == null) {
@@ -314,7 +316,7 @@ object AdmobInter {
             return
         }
 
-        val dialog = DialogShowLoadingAds(topActivity)
+        val dialog = BaseDialogFullScreen(topActivity,resLoadingAds)
 
         if (topActivity.lifecycle.currentState == Lifecycle.State.RESUMED) {
             if (!dialog.isShowing) {

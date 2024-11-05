@@ -7,12 +7,14 @@ import com.admob.AdFormat
 import com.admob.AdType
 import com.admob.TAdCallback
 import com.admob.ads.AdsSDK
+import com.admob.ads.R
 import com.admob.getAppCompatActivityOnTop
 import com.admob.getPaidTrackingBundle
 import com.admob.isEnable
 import com.admob.isNetworkAvailable
 import com.admob.onNextActionWhenResume
 import com.admob.ui.dialogs.DialogShowLoadingAds
+import com.admob.ui.dialogs.DialogShowLoadingRewardAds
 import com.admob.waitActivityResumed
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -36,7 +38,8 @@ object AdmobRewarded {
         activity: AppCompatActivity,
         space: String,
         timeout: Long = 10_000L,
-        isShowDefaultLoadingDialog: Boolean = true,
+        showLoadingReward: Boolean = true,
+        resLoadingAds: Int = R.layout.dialog_loading_inter,
         callBack: TAdCallback? = null,
         onFailureUserNotEarn: () -> Unit = {},
         onUserEarnedReward: () -> Unit
@@ -62,10 +65,10 @@ object AdmobRewarded {
         }
 
 
-        var dialog: DialogShowLoadingAds? = null
+        var dialog : DialogShowLoadingRewardAds? = null
 
-        if (isShowDefaultLoadingDialog) {
-            dialog = DialogShowLoadingAds(activity).apply { show() }
+        if (showLoadingReward) {
+            dialog = DialogShowLoadingRewardAds(activity,resLoadingAds).apply { show() }
         }
 
 

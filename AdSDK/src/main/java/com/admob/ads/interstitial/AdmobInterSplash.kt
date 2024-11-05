@@ -7,6 +7,7 @@ import com.admob.AdFormat
 import com.admob.AdType
 import com.admob.TAdCallback
 import com.admob.ads.AdsSDK
+import com.admob.ads.R
 import com.admob.app_update.Update
 import com.admob.getActivityOnTop
 import com.admob.getAppCompatActivityOnTop
@@ -28,8 +29,10 @@ object AdmobInterSplash {
      */
     fun show(
         space: String,
-        timeout: Long,
-        showAdCallback: TAdCallback,
+        timeout: Long = 15_000,
+        showLoadingInter: Boolean = true,
+        resLoadingAds: Int = R.layout.dialog_loading_inter,
+        showAdCallback: TAdCallback? = null,
         nextAction: () -> Unit
     ) {
 
@@ -93,11 +96,12 @@ object AdmobInterSplash {
                         AdsSDK.getAppCompatActivityOnTop()?.waitActivityResumed {
                             AdmobInter.show(
                                 space = space,
-                                showLoadingInter = false,
+                                showLoadingInter = showLoadingInter,
                                 forceShow = true,
                                 nextActionBeforeDismiss = false,
                                 loadAfterDismiss = false,
                                 loadIfNotAvailable = false,
+                                resLoadingAds = resLoadingAds,
                                 callback = showAdCallback,
                                 nextAction = ::checkUpdateAndNext
                             )

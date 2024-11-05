@@ -17,3 +17,17 @@ class DialogShowLoadingAds(context: Context) : BaseDialog<ViewDataBinding>(conte
 
     override fun onViewReady() {}
 }
+
+class DialogShowLoadingRewardAds(
+    context: Context,
+    resLoadingAds: Int = R.layout.dialog_loading_inter
+) : BaseDialog<ViewDataBinding>(context) {
+    override val binding: ViewDataBinding = DataBindingUtil.inflate<ViewDataBinding>(
+        LayoutInflater.from(context),
+        resLoadingAds,
+        null,
+        false
+    )
+
+    override fun onViewReady() {}
+}

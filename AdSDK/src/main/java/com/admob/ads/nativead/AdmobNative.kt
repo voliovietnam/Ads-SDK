@@ -258,15 +258,15 @@ object AdmobNative {
             }
             .withAdListener(object : AdListener() {
                 override fun onAdFailedToLoad(adError: LoadAdError) {
+                    nativesLoading.remove(space)
+                    natives[space] = null
+                    runCatching { Throwable(adError.message) }
                     AdsSDK.adCallback.onAdFailedToLoad(adChild.adsId, AdType.Native, adError)
                     getNativeCallback(space)?.onAdFailedToLoad(
                         adChild.adsId,
                         AdType.Native,
                         adError
                     )
-                    nativesLoading.remove(space)
-                    natives[space] = null
-                    runCatching { Throwable(adError.message) }
                 }
 
                 override fun onAdClicked() {
@@ -286,9 +286,9 @@ object AdmobNative {
                 }
 
                 override fun onAdLoaded() {
+                    nativesLoading.remove(space)
                     AdsSDK.adCallback.onAdLoaded(adChild.adsId, AdType.Native)
                     getNativeCallback(space)?.onAdLoaded(adChild.adsId, AdType.Native)
-                    nativesLoading.remove(space)
                 }
 
                 override fun onAdOpened() {

@@ -273,8 +273,7 @@ object AdmobBanner {
             }
 
             override fun onAdLoaded() {
-                AdsSDK.adCallback.onAdLoaded(adUnitId, AdType.Banner)
-                tAdCallback?.onAdLoaded(adUnitId, AdType.Banner)
+
                 adView.setOnPaidEventListener { adValue ->
                     val bundle =
                         getPaidTrackingBundle(adValue, adUnitId, "Banner", adView.responseInfo)
@@ -287,7 +286,8 @@ object AdmobBanner {
                     }
                 }
                 banners[space] = adView
-
+                AdsSDK.adCallback.onAdLoaded(adUnitId, AdType.Banner)
+                tAdCallback?.onAdLoaded(adUnitId, AdType.Banner)
                 onAdLoaded.invoke()
             }
         }

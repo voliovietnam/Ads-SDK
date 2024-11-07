@@ -79,16 +79,16 @@ object AdmobInter {
             AdRequest.Builder().build(),
             object : InterstitialAdLoadCallback() {
                 override fun onAdFailedToLoad(error: LoadAdError) {
+                    intersLoading.remove(space)
                     AdsSDK.adCallback.onAdFailedToLoad(adChild.adsId, AdType.Inter, error)
                     callback?.onAdFailedToLoad(adChild.adsId, AdType.Inter, error)
-                    intersLoading.remove(space)
                 }
 
                 override fun onAdLoaded(interstitialAd: InterstitialAd) {
-                    AdsSDK.adCallback.onAdLoaded(adChild.adsId, AdType.Inter)
-                    callback?.onAdLoaded(adChild.adsId, AdType.Inter)
                     intersLoading.remove(space)
                     inters[space] = interstitialAd
+                    AdsSDK.adCallback.onAdLoaded(adChild.adsId, AdType.Inter)
+                    callback?.onAdLoaded(adChild.adsId, AdType.Inter)
                 }
             })
     }

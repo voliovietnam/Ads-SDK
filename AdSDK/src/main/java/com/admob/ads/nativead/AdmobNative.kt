@@ -22,6 +22,8 @@ import com.admob.TAdCallback
 import com.admob.ads.AdsSDK
 import com.admob.ads.R
 import com.admob.ads.databinding.AdLoadingViewBinding
+import com.admob.getActivityOnTop
+import com.admob.getAppCompatActivityOnTop
 import com.admob.getPaidTrackingBundle
 import com.admob.isEnable
 import com.admob.isNetworkAvailable
@@ -249,7 +251,8 @@ object AdmobNative {
         if (!adChild.isEnable()) return
 
         val id = if (AdsSDK.isDebugging) Constant.ID_ADMOB_NATIVE_TEST else adChild.adsId
-        val adLoader = AdLoader.Builder(AdsSDK.app, id)
+        val activity = AdsSDK.getAppCompatActivityOnTop() ?: AdsSDK.getActivityOnTop() ?: AdsSDK.app
+        val adLoader = AdLoader.Builder(activity, id)
             .forNativeAd { ad: NativeAd ->
                 natives[space]?.destroy()
                 natives[space] = ad

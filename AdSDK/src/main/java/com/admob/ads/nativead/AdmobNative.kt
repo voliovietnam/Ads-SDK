@@ -467,7 +467,7 @@ object AdmobNative {
 
     }
 
-    private fun dismissCollapsible(space: String){
+     fun dismissCollapsible(space: String){
         kotlin.runCatching {
             nativesCollapsiblePopupWindow[space]?.dismiss()
         }
